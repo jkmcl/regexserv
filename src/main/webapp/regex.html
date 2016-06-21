@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>RegEx Service</title>
+	<script src="angularjs/1.5.7/angular.min.js"></script>
+	<style type="text/css">
+		body {
+			text-align: left;
+			font: small Arial, Helvetica, sans-serif;
+			margin-left: 5%;
+			margin-right: 5%;
+		}
+		table { border-collapse: collapse; }
+		table, tr, th, td { border: 1px solid black; padding: 0.25em; }
+		th { text-align: left; font-weight: normal; background-color: #e6e6e6; }
+		.error { color: red; }
+	</style>
+</head>
+<body>
+
+<div data-ng-app="myApp" data-ng-controller="myController">
+
+	<form data-ng-submit="evaluate()">
+		<p>Regular expression: <input type="text" data-ng-model="regex"></p>
+		<p>Input: <input type="text" data-ng-model="input"></p>
+		<p><input type="submit" value="Evaluate"></p>
+	</form>
+
+	<p>&nbsp;</p>
+
+	<p>Result</p>
+	
+	<div data-ng-if="errorMessage.length > 0" class="error">
+		<pre>{{ errorMessage }}</pre>
+	</div>
+
+	<div data-ng-if="errorMessage.length <= 0">
+		<table>
+		<tr><th>groupCount</th><td>{{ groupCount }}</td></tr>
+		<tr><th>matches</th><td>{{ matches }}</td></tr>
+		<tr><th>find</th><td>{{ find }}</td></tr>
+		</table>
+
+		<br>
+		
+		<table>
+			<tr>
+				<th>Group</th>
+				<th>Start</th>
+				<th>End</th>
+				<th>Content</th>
+			</tr>
+			<tr data-ng-repeat="g in groups track by $index">
+				<td>{{ $index }}</td>
+				<td>{{ g.start }}</td>
+				<td>{{ g.end }}</td>
+				<td>{{ g.content }}</td>
+			</tr>
+		</table>
+	</div>
+
+</div>
+
+<script>
+var app = angular.module('myApp', []);
+app.controller('myController', function($scope, $http) {
+
+	$scope.groupCount = "";
+	$scope.matches = "";
+	$scope.find = "";
+	$scope.groups = [];
+	$scope.errorMessage = "";
+
+	$scope.evaluate = function() {
+
+		$http.get("RegExServlet", {
+			params: {
+				regex: $scope.regex,
+				input: $scope.input
+			}
+		})
+		.then(
+			// Success
+			function(response) {
+				$scope.groupCount = response.data.groupCount;
+				$scope.matches = response.data.matches;
+				$scope.find = response.data.find;
+				$scope.groups = response.data.groups;
+				$scope.errorMessage = response.data.errorMessage;
+			},
+			// Error
+			function(response) {
+				$scope.errorMessage = response.status + ": " + response.statusText;
+			}
+		);
+	};
+});
+</script>
+
+</body>
+</html>
